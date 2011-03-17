@@ -46,6 +46,7 @@ package org.bigbluebutton.modules.phone.managers {
 		private var uri:String;
 		private var uid:String;
 		private var room:String;
+		private var externUID:String;
 		
 		private var isConnected:Boolean = false;
 		private var registered:Boolean = false;
@@ -64,7 +65,8 @@ package org.bigbluebutton.modules.phone.managers {
 			if (isConnected) return;
 			isConnected = true;
 			
-			this.uid = uid;	
+			this.uid = uid;
+			this.externUID = externUID;
 			this.username  = username;
 			this.room = room;
 			this.uri   = uri;
@@ -164,7 +166,7 @@ package org.bigbluebutton.modules.phone.managers {
 		//********************************************************************************************		
 		public function doCall(dialStr:String):void {
 			LogUtil.debug("Calling " + dialStr);
-			netConnection.call("voiceconf.call", null, "default", username, dialStr);
+			netConnection.call("voiceconf.call", null, "default", externUID + " " + username, dialStr);
 		}
 				
 		public function doHangUp():void {			
