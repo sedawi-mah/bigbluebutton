@@ -60,11 +60,12 @@ package org.bigbluebutton.modules.videoconf.business
 		[Bindable] public var resolutions:Array;
 		
 		protected function getVideoResolution(stream:String):Array {
-			for each (var resStr:String in resolutions){
-				if (resStr == stream.substr(0, resStr.length))
-					return resStr.split( "x" );
-			}
-			return null;
+			return stream.substr(0, stream.length - String(this.userId).length).split("x");
+//			for each (var resStr:String in resolutions){
+//				if (resStr == stream.substr(0, resStr.length))
+//					return resStr.split( "x" );
+//			}
+//			return null;
 		}
 	
 		protected function get paddingVertical():Number {

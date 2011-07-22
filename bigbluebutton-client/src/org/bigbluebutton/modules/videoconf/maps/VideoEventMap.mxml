@@ -57,7 +57,7 @@
 				if (userid == module.userid) return;
 				
 				var window:VideoWindow = new VideoWindow();
-				window.resolutions = module.resolutions.split(",");
+				window.userId = userid;
 				
 				if (mock) {
 					window.startVideo(module.mockConnection, stream);

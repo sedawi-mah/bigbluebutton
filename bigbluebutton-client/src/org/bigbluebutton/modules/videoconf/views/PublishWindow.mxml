@@ -88,11 +88,21 @@
 				var camera:Camera = Camera.getCamera(cmbCameraSelector.selectedIndex.toString());
 				if (camera == null) return;
 				
-				setResolution();
+				var res:Array = cmbResolution.selectedLabel.split( "x" );
+				camWidth = originalWidth = Number(res[0]);
+				camHeight = originalHeight = Number(res[1]);
 				
 				camera.setKeyFrameInterval(5);
 				camera.setMode(camWidth,camHeight,15);
 				camera.setQuality(0,quality);
+				if (camera.width != camWidth || camera.height != camHeight) {
+					LogUtil.debug("Resolution " + camWidth + "x" + camHeight
+						+ " is not supported, using " + camera.width + "x" + camera.height + " instead");
+					camWidth = originalWidth = camera.width;
+					camHeight = originalHeight = camera.height;
+				}
+				setAspectRatio(camWidth, camHeight);
+				setStreamName();
 				
 				_video = new Video(camWidth, camHeight);
 				//Next two lines may seem redundant but they're not. Do not delete.
@@ -147,12 +157,8 @@
 				dispatchEvent(e);
 			}
 			
-			private function setResolution():void{
-				var res:Array = cmbResolution.selectedLabel.split( "x" );
-				camWidth = originalWidth = Number(res[0]);
-				camHeight = originalHeight = Number(res[1]);
-				setAspectRatio(camWidth, camHeight);
-				streamName = cmbResolution.selectedLabel.concat(this.userId);
+			private function setStreamName():void{
+				this.streamName = camWidth + "x" + camHeight + userId;
 			}
 			
 			public function set userrole(role:String):void{
