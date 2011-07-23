@@ -167,6 +167,35 @@ class PresentationController {
 		return null;
 	}
 	
+	def showImageSlide = {
+		
+		def presentationName = params.presentation_name
+		def conf = params.conference
+		def rm = params.room
+		def image = params.id
+		println "Controller: Show images request for $presentationName $image"
+		
+		InputStream is = null;
+		try {
+			def pres = presentationService.showImageSlide(conf, rm, presentationName, image)
+			if (pres.exists()) {
+				println "Controller: Sending images reply for $presentationName $image"
+				
+				def bytes = pres.readBytes()
+				response.addHeader("Cache-Control", "no-cache")
+				response.contentType = 'image'
+				response.outputStream << bytes;
+			} else {
+				println "$pres does not exist."
+			}
+		} catch (IOException e) {
+			println("Error reading file.\n" + e.getMessage());
+		}
+		
+		return null;
+	}
+	
+	
 	def show = {
 		//def filename = params.id.replace('###', '.')
 		def filename = params.presentation_name
@@ -222,7 +251,7 @@ class PresentationController {
 							presentation(name:presentationName) {
 								slides(count:numThumbs) {
 								  for (def i = 1; i <= numThumbs; i++) {
-								  	slide(number:"${i}", name:"slide/${i}", thumb:"thumbnail/${i}")
+								  	slide(number:"${i}", name:"slide/${i}", thumb:"thumbnail/${i}", image:"image/${i}")
 								  }
 								}
 							}
@@ -252,6 +281,30 @@ class PresentationController {
 				}
 			}		
 	}
+	
+	
+	
+	def numberOfImageSlides = {
+		def filename = params.presentation_name
+		def f = confInfo()
+		def numThumbs = presentationService.numberOfThumbnails(f.conference, f.room, filename)
+			withFormat {				
+				xml {
+					render(contentType:"text/xml") {
+						conference(id:f.conference, room:f.room) {
+							presentation(name:filename) {
+								imageSlides(count:numThumbs) {
+									for (def i=0;i<numThumbs;i++) {
+								  		imageSlide(name:"imageSlides/${i}")
+								  	}
+								}
+							}
+						}
+					}
+				}
+			}		
+	}
+	
 	
 	def confInfo = {
 //    	Subject currentUser = SecurityUtils.getSubject() 

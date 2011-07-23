@@ -37,6 +37,7 @@ import org.bigbluebutton.presentation.ConversionUpdateMessage;
 import org.bigbluebutton.presentation.PageConverter;
 import org.bigbluebutton.presentation.PdfToSwfSlide;
 import org.bigbluebutton.presentation.ThumbnailCreator;
+import org.bigbluebutton.presentation.ImageSlideCreator;
 import org.bigbluebutton.presentation.UploadedPresentation;
 import org.bigbluebutton.presentation.ConversionUpdateMessage.MessageBuilder;
 import org.slf4j.Logger;
@@ -60,6 +61,7 @@ public class PdfToSwfSlidesGenerationService {
 		if (pres.getNumberOfPages() > 0) {
 			convertPdfToSwf(pres);
 			createThumbnails(pres);
+			createImageSlides(pres);
 			notifier.sendConversionCompletedMessage(pres);
 		}		
 	}
@@ -91,6 +93,12 @@ public class PdfToSwfSlidesGenerationService {
 		log.debug("Creating thumbnails.");
 		notifier.sendCreatingThumbnailsUpdateMessage(pres);
 		thumbnailCreator.createThumbnails(pres.getUploadedFile(), pres.getNumberOfPages());
+	}
+	
+	private void createImageSlides(UploadedPresentation pres) {
+		log.debug("Creating image Slides.");
+		//notifier.sendCreatingThumbnailsUpdateMessage(pres);
+		imageSlideCreator.createImageSlides(pres.getUploadedFile(), pres.getNumberOfPages());
 	}
 	
 	private void convertPdfToSwf(UploadedPresentation pres) {
@@ -180,6 +188,10 @@ public class PdfToSwfSlidesGenerationService {
 	
 	public void setThumbnailCreator(ThumbnailCreator thumbnailCreator) {
 		this.thumbnailCreator = thumbnailCreator;
+	}
+	
+	public void setImageSlideCreator(ImageSlideCreator imageSlideCreator) {
+		this.imageSlideCreator = imageSlideCreator;
 	}
 	
 	public void setMaxConversionTime(int minutes) {

@@ -69,6 +69,10 @@ class PdfToSwfSlidesGenerationServiceTests extends GroovyTestCase {
 		thumbCreator.setImageMagickDir(IMAGEMAGICK_DIR)
 		thumbCreator.setBlankThumbnail(BLANK_THUMBNAIL)
 
+		ImageSlideCreator imgSlideCreator = new ImageSlideCreatorImp()
+		imgSlideCreator.setImageMagickDir(IMAGEMAGICK_DIR)
+		imgSlideCreator.setBlankImageSlide(BLANK_THUMBNAIL)
+		
 		SwfSlidesGenerationProgressNotifier notifier = new SwfSlidesGenerationProgressNotifier()
 		slidesGenerationService = new PdfToSwfSlidesGenerationService()
 		slidesGenerationService.setPageConverter(pdf2SwfPageConverter) 

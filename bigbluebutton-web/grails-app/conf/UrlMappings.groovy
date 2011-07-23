@@ -44,6 +44,14 @@ class UrlMappings {
       		action = [GET:'showThumbnail']
       }
       
+      "/presentation/$conference/$room/$presentation_name/images"(controller:"presentation") {
+      		action = [GET:'numberOfImageSlides']
+      }
+      
+      "/presentation/$conference/$room/$presentation_name/image/$id"(controller:"presentation") {
+      		action = [GET:'showImageSlide']
+      }
+      
       "/$controller/$action?/$id?"{
 	      constraints {
 			 // apply constraints here

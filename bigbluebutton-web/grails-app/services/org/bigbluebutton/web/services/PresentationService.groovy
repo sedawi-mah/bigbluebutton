@@ -115,6 +115,16 @@ class PresentationService {
 		new File(thumbFile)
 	}
 	
+	def showImageSlide = {conf, room, presentationName, image ->
+		println "Show images request for $presentationName $image"
+		def imageSlideFile = roomDirectory(conf, room).absolutePath + File.separatorChar + presentationName + File.separatorChar +
+					"images" + File.separatorChar + "image-${image}.png"
+		log.debug "showing $imageSlideFile"
+		
+		new File(imageSlideFile)
+	}
+	
+	
 	def numberOfThumbnails = {conf, room, name ->
 		def thumbDir = new File(roomDirectory(conf, room).absolutePath + File.separatorChar + name + File.separatorChar + "thumbnails")
 		thumbDir.listFiles().length

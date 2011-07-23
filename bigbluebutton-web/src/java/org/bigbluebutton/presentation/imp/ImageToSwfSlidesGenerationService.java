@@ -35,6 +35,7 @@ import java.util.concurrent.TimeoutException;
 import org.bigbluebutton.presentation.PageConverter;
 import org.bigbluebutton.presentation.ImageToSwfSlide;
 import org.bigbluebutton.presentation.ThumbnailCreator;
+import org.bigbluebutton.presentation.ImageSlideCreator;
 import org.bigbluebutton.presentation.UploadedPresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +50,7 @@ public class ImageToSwfSlidesGenerationService {
 	private PageConverter jpgToSwfConverter;
 	private PageConverter pngToSwfConverter;
 	private ThumbnailCreator thumbnailCreator;
+	private ImageSlideCreator imageSlideCreator;
 	private long MAX_CONVERSION_TIME = 5*60*1000;
 	private String BLANK_SLIDE;
 	
@@ -69,7 +71,7 @@ public class ImageToSwfSlidesGenerationService {
 		
 		
 		createThumbnails(pres);
-		
+		createImageSlides(pres);
 		notifier.sendConversionCompletedMessage(pres);
 	}
 	
@@ -86,6 +88,11 @@ public class ImageToSwfSlidesGenerationService {
 		log.debug("Creating thumbnails.");
 		notifier.sendCreatingThumbnailsUpdateMessage(pres);
 		thumbnailCreator.createThumbnails(pres.getUploadedFile(), pres.getNumberOfPages());
+	}
+	private void createImageSlides(UploadedPresentation pres) {
+		log.debug("Creating image Slides.");
+		//notifier.sendCreatingThumbnailsUpdateMessage(pres);
+		imageSlideCreator.createImageSlides(pres.getUploadedFile(), pres.getNumberOfPages());
 	}
 	
 	private void convertImageToSwf(UploadedPresentation pres, PageConverter pageConverter) {
@@ -166,6 +173,10 @@ public class ImageToSwfSlidesGenerationService {
 	
 	public void setThumbnailCreator(ThumbnailCreator thumbnailCreator) {
 		this.thumbnailCreator = thumbnailCreator;
+	}
+	
+	public void setImageSlideCreator(ImageSlideCreator imageSlideCreator) {
+		this.imageSlideCreator = imageSlideCreator;
 	}
 	
 	public void setMaxConversionTime(int minutes) {

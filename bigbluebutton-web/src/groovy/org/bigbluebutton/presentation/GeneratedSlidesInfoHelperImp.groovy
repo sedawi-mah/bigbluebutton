@@ -40,7 +40,7 @@ public class GeneratedSlidesInfoHelperImp implements GeneratedSlidesInfoHelper {
 		       presentation(name:pres.name) {
 		          slides(count:pres.numberOfPages) {
 		             for (def i = 1; i <= pres.numberOfPages; i++) {
-		                slide(number:"${i}", name:"slide/${i}", thumb:"thumbnail/${i}")
+		                slide(number:"${i}", name:"slide/${i}", thumb:"thumbnail/${i}", image:"image/${i}")
 		             }
 		          }
 		       }

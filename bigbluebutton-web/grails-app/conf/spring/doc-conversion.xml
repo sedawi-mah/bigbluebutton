@@ -90,6 +90,11 @@
 		<property name="blankThumbnail" value="${BLANK_THUMBNAIL}"/>
 	</bean>
 	
+	<bean id="imgSlideCreator" class="org.bigbluebutton.presentation.imp.ImageSlideCreatorImp">
+		<property name="imageMagickDir" value="${imageMagickDir}"/>
+		<property name="blankImageSlide" value="${BLANK_THUMBNAIL}"/>
+	</bean>
+	
 	<bean id="generatedSlidesInfoHelper" class="org.bigbluebutton.presentation.GeneratedSlidesInfoHelperImp"/>
 	
 	<bean id="pdfToSwfSlidesGenerationService" class="org.bigbluebutton.presentation.imp.PdfToSwfSlidesGenerationService">
@@ -97,6 +102,7 @@
 		<property name="pageConverter" ref="pdf2SwfPageConverter"/>
 		<property name="pdfPageToImageConversionService" ref="imageConvSvc"/>
 		<property name="thumbnailCreator" ref="thumbCreator"/>
+		<property name="imageSlideCreator" ref="imgSlideCreator"/>
 		<property name="blankSlide" value="${BLANK_SLIDE}"/>
 		<property name="maxConversionTime" value="${maxConversionTime}"/>
 		<property name="swfSlidesGenerationProgressNotifier" ref="swfSlidesGenerationProgressNotifier"/>
@@ -106,6 +112,7 @@
 		<property name="pngPageConverter" ref="png2SwfConverter"/>
 		<property name="jpgPageConverter" ref="jpg2SwfConverter"/>
 		<property name="thumbnailCreator" ref="thumbCreator"/>
+		<property name="imageSlideCreator" ref="imgSlideCreator"/>
 		<property name="blankSlide" value="${BLANK_SLIDE}"/>
 		<property name="maxConversionTime" value="${maxConversionTime}"/>
 		<property name="swfSlidesGenerationProgressNotifier" ref="swfSlidesGenerationProgressNotifier"/>
