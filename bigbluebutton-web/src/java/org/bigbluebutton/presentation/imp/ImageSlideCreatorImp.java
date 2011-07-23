@@ -20,8 +20,6 @@
  * 
  * @version $Id: $
  */
-package org.bigbluebutton.web.services
-
 
 package org.bigbluebutton.presentation.imp;
 
