@@ -94,7 +94,7 @@ public class FreeswitchServiceProvider implements ConferenceServiceProvider {
 	public void setConferenceEventListener(ConferenceEventListener l) {
 		conferenceEventListener = l;		
 		// this call have been moved to handleESLConnection
-//		appDelegate.setConferenceEventListener(conferenceEventListener);
+		// appDelegate.setConferenceEventListener(conferenceEventListener);
 	}
 	
 	public void setMessagingService(MessagingService messagingService) {
@@ -143,10 +143,10 @@ public class FreeswitchServiceProvider implements ConferenceServiceProvider {
 					appDelegate.add(p);
 					id = appDelegate.size() - 1;
 					appDelegateByHostname.put(hostname, id);
-					appDelegateByRoom.put(room, id);
 				} else {
 					p = appDelegate.get(id);
 				}
+				appDelegateByRoom.put(room, id);
 				p.populateRoom(room);
 			}
 		});
