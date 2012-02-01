@@ -21,53 +21,60 @@
 */
 package org.bigbluebutton.webconference.voice.freeswitch;
 
-import java.net.ConnectException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import org.freeswitch.esl.client.inbound.Client;
-import org.freeswitch.esl.client.inbound.InboundConnectionFailure;
-import org.freeswitch.esl.client.manager.ManagerConnection;
+import org.bigbluebutton.conference.service.messaging.MessageListener;
+import org.bigbluebutton.conference.service.messaging.MessagingService;
 import org.bigbluebutton.webconference.voice.ConferenceServiceProvider;
 import org.bigbluebutton.webconference.voice.events.ConferenceEventListener;
+import org.freeswitch.esl.client.manager.ManagerConnection;
 import org.red5.logging.Red5LoggerFactory;
 import org.slf4j.Logger;
 
 public class FreeswitchServiceProvider implements ConferenceServiceProvider {
 	private static Logger log = Red5LoggerFactory.getLogger(FreeswitchServiceProvider.class, "bigbluebutton");
 	
-	private ConferenceServiceProvider appDelegate;
+	private Map<String, Integer> appDelegateByHostname = new HashMap<String, Integer>();
+	private Map<String, Integer> appDelegateByRoom = new HashMap<String, Integer>();
+	private List<ConferenceServiceProvider> appDelegate = new ArrayList<ConferenceServiceProvider>();
+
 	private ManagerConnection connection;
 	private ConferenceEventListener conferenceEventListener;
+	private MessagingService messagingService;
 	
 	@Override
     public void record(String room, String meetingid){
-    	appDelegate.record(room,meetingid);
+		Integer id = appDelegateByRoom.get(room);
+		if (id != null) appDelegate.get(id).record(room,meetingid);
+		else log.error("Cannot find the connection to handle the call RECORD");
     }
 	
 	@Override
 	public void eject(String room, Integer participant) {
-		appDelegate.eject(room, participant);
+		Integer id = appDelegateByRoom.get(room);
+		if (id != null) appDelegate.get(id).eject(room, participant);
+		else log.error("Cannot find the connection to handle the call EJECT");
 	}
 
 	@Override
 	public void mute(String room, Integer participant, Boolean mute) {
-		appDelegate.mute(room, participant, mute);
+		Integer id = appDelegateByRoom.get(room);
+		if (id != null) appDelegate.get(id).mute(room, participant, mute);
+		else log.error("Cannot find the connection to handle the call MUTE");
 	}
 
 	@Override
 	public void populateRoom(String room) {
-		appDelegate.populateRoom(room);
+		// this is called when the ESL channel is established 
 	}
 
 	@Override
 	public void shutdown() {
-		if ((connection != null) ) {
-			Client c = connection.getESLClient();
-			if((c != null ) && c.canSend()) {
-				log.info("Logging off fom [" + connection.toString() + "]");
-				connection.disconnect();
-            }
-		}
-		appDelegate.shutdown();
+		for (ConferenceServiceProvider p : appDelegate)
+			p.shutdown();
 	}
 
 	@Override
@@ -76,37 +83,73 @@ public class FreeswitchServiceProvider implements ConferenceServiceProvider {
 			log.error("Cannot start application as ESL Client has not been set.");
 			return false;
 		}
-
-		if (connect()) {
-            return appDelegate.startup();
-		} else {
-			return false;
-		}
-	}
-	
-	private boolean connect() {
-		log.info("Logging in as [" + connection.getPassword() + "] to [" + connection.getHostname() + ":" + connection.getPort() + "]");
-		try {
-			connection.connect();
-			return true;
-        } catch ( InboundConnectionFailure e ) {
-			log.error( "Connect to FreeSwitch ESL socket failed", e );
-		} 
-		return false;
+		return true;
 	}
 	
 	public void setManagerConnection(ManagerConnection c) {
 		connection = c;
 	}
 
-	public void setFreeswitchApplication(FreeswitchApplication f) {
-		appDelegate = f;
-		
-    }
-
 	@Override
 	public void setConferenceEventListener(ConferenceEventListener l) {
 		conferenceEventListener = l;		
-		appDelegate.setConferenceEventListener(conferenceEventListener);
+		// this call have been moved to handleESLConnection
+//		appDelegate.setConferenceEventListener(conferenceEventListener);
+	}
+	
+	public void setMessagingService(MessagingService messagingService) {
+		this.messagingService = messagingService;
+		this.messagingService.addListener(new MessageListener() {
+			
+			@Override
+			public void presentationUpdates(HashMap<String, String> map) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void endMeetingRequest(String meetingId) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void handleESLConnection(HashMap<String, String> map) {
+				// example: <sip:72702@143.54.12.94:5060;transport=udp>
+				String contact = map.get("add");
+				
+				int firstColon = contact.indexOf(':'),
+						at = contact.indexOf('@'),
+						secondColon = contact.indexOf(':', at);
+				
+				String room = contact.substring(firstColon + 1, at);
+				// if the configured hostname is localhost, it means that the FS
+				// is running in the same server, and it's not listening to the
+				// external IP, so I must change the hostname to localhost
+				String hostname = connection.getHostname().equals("127.0.0.1")? "127.0.0.1": contact.substring(at + 1, secondColon);
+				
+				log.debug("INVITE reply contact: {}", contact);
+				log.debug("FreeSWITCH hostname: {}", hostname);
+				log.debug("FreeSWITCH number: {}", room);
+				
+				Integer id = appDelegateByHostname.get(hostname);
+				ConferenceServiceProvider p = null;
+				if (id == null) {
+					p = new FreeswitchApplication();
+					p.setConferenceEventListener(conferenceEventListener);
+					((FreeswitchApplication) p).setDebugNullConferenceAction(true);
+					((FreeswitchApplication) p).connect(hostname, connection.getPort(), connection.getPassword());
+					
+					appDelegate.add(p);
+					id = appDelegate.size() - 1;
+					appDelegateByHostname.put(hostname, id);
+					appDelegateByRoom.put(room, id);
+				} else {
+					p = appDelegate.get(id);
+				}
+				p.populateRoom(room);
+			}
+		});
+		this.messagingService.start();
 	}
 }

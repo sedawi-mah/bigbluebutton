@@ -8,13 +8,14 @@
 
 	<beans:bean id="conferenceServiceProvider" class="org.bigbluebutton.webconference.voice.freeswitch.FreeswitchServiceProvider">
 		<beans:property name="managerConnection" ref="eslConnection"/>
-  		<beans:property name="freeswitchApplication" ref="freeswitchApplication"/>
+  		<!-- beans:property name="freeswitchApplication" ref="freeswitchApplication"/-->
+		<beans:property name="messagingService" ref="messagingService"/>
 	</beans:bean>
 	
-	<beans:bean id="freeswitchApplication" class="org.bigbluebutton.webconference.voice.freeswitch.FreeswitchApplication">
+	<!-- beans:bean id="freeswitchApplication" class="org.bigbluebutton.webconference.voice.freeswitch.FreeswitchApplication">
 		<beans:property name="managerConnection" ref="eslConnection"/>
-    <beans:property name="DebugNullConferenceAction" value="true"/>
-	</beans:bean>
+        <beans:property name="DebugNullConferenceAction" value="true"/>
+	</beans:bean-->
 
 	<beans:bean id="eslConnection" class="org.freeswitch.esl.client.manager.DefaultManagerConnection">
 		<beans:property name="hostname" value="${esl.host}"/>

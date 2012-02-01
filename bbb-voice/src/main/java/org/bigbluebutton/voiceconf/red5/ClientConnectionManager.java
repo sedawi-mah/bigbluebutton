@@ -19,17 +19,23 @@
 **/
 package org.bigbluebutton.voiceconf.red5;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.bigbluebutton.voiceconf.red5.messaging.MessagingConstants;
+import org.bigbluebutton.voiceconf.red5.messaging.MessagingService;
 import org.red5.logging.Red5LoggerFactory;
 import org.red5.server.api.service.IServiceCapableConnection;
 import org.slf4j.Logger;
+
+import com.google.gson.Gson;
 
 public class ClientConnectionManager {
 	private static Logger log = Red5LoggerFactory.getLogger(ClientConnectionManager.class, "sip");
 	
 	private Map<String, ClientConnection> clients = new ConcurrentHashMap<String, ClientConnection>();
+	private MessagingService messagingService;
 	
 	public void createClient(String id, String userid, String username, IServiceCapableConnection connection) {
 		ClientConnection cc = new ClientConnection(id, userid, username, connection);
@@ -70,5 +76,17 @@ public class ClientConnectionManager {
 		} else {
 			log.warn("Can't find client {} to inform user that she has left the conference.", clientId);
 		}
+	}
+	
+	public void setMessagingService(MessagingService messagingService) {
+		this.messagingService = messagingService;
+		this.messagingService.start();
+	}
+	
+	public void addContact(String contact) {
+		Map<String, String> map = new HashMap<String, String>();
+		map.put("add", contact);
+		Gson gson = new Gson();
+		messagingService.send(MessagingConstants.VOICE_CHANNEL, gson.toJson(map));
 	}
 }

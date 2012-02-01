@@ -67,7 +67,7 @@ dependencies {
 	
 	// Spring 
 	providedCompile 'org.springframework:spring-web:3.0.6.RELEASE@jar' 
-	providedCompile  'org.springframework:spring-beans:3.0.6.RELEASE@jar'
+	providedCompile 'org.springframework:spring-beans:3.0.6.RELEASE@jar'
 	providedCompile 'org.springframework:spring-context:3.0.6.RELEASE@jar'
 	providedCompile 'org.springframework:spring-core:3.0.6.RELEASE@jar'
 	

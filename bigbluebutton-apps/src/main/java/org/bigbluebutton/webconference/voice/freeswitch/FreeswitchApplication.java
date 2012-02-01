@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Observable;
-import java.util.logging.Level;
 import org.bigbluebutton.webconference.voice.ConferenceServiceProvider;
 import org.bigbluebutton.webconference.voice.events.ConferenceEventListener;
 import org.bigbluebutton.webconference.voice.events.ParticipantJoinedEvent;
@@ -41,6 +40,8 @@ import org.bigbluebutton.webconference.voice.freeswitch.actions.MuteParticipantC
 import org.bigbluebutton.webconference.voice.freeswitch.actions.RecordConferenceCommand;
 import org.freeswitch.esl.client.IEslEventListener;
 import org.freeswitch.esl.client.inbound.Client;
+import org.freeswitch.esl.client.inbound.InboundConnectionFailure;
+import org.freeswitch.esl.client.manager.DefaultManagerConnection;
 import org.freeswitch.esl.client.manager.ManagerConnection;
 import org.freeswitch.esl.client.transport.event.EslEvent;
 import org.freeswitch.esl.client.transport.message.EslMessage;
@@ -74,9 +75,27 @@ public class FreeswitchApplication extends Observable implements ConferenceServi
         return Collections.unmodifiableMap(result);
     }
     
+	public boolean connect(String hostname, int port, String password) {
+    	manager = new DefaultManagerConnection(hostname, port, password);
+
+    	log.info("Logging in as [" + manager.getPassword() + "] to [" + manager.getHostname() + ":" + manager.getPort() + "]");
+		try {
+			manager.connect();
+	        return startup();
+        } catch ( InboundConnectionFailure e ) {
+			log.error( "Connect to FreeSwitch ESL socket failed", e );
+			return false;
+		}
+	}
+	
     @Override
-    public boolean startup() {    	
-        Client c = manager.getESLClient();
+    public boolean startup() {
+		if (manager == null) {
+			log.error("Cannot start application as ESL Client has not been set.");
+			return false;
+		}
+
+		Client c = manager.getESLClient();
         if (c.canSend()) {
             c.addEventListener( this );
             c.cancelEventSubscriptions();
@@ -85,12 +104,17 @@ public class FreeswitchApplication extends Observable implements ConferenceServi
             c.addEventFilter( "Event-Name", "custom" );
             c.addEventFilter( "Event-Name", "background_job" );
             
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException ex) {
-                java.util.logging.Logger.getLogger(FreeswitchApplication.class.getName()).log(Level.SEVERE, null, ex);
-                return false;
-            }        	
+            // (fcecagno) Since the ESL connection establishment was moved to after
+            // the first user joins a conference handled by the given server, any sleep
+            // mean that the connection will be postponed and there will be a delay 
+            // between the actions of click on the handset icon and the name of the user 
+            // in the listeners window. So if it's not essential, it should be removed.
+//            try {
+//                Thread.sleep(5000);
+//            } catch (InterruptedException ex) {
+//                java.util.logging.Logger.getLogger(FreeswitchApplication.class.getName()).log(Level.SEVERE, null, ex);
+//                return false;
+//            }
         }
 
         //Start Heartbeat and exception Event Observer Monitor
@@ -108,7 +132,16 @@ public class FreeswitchApplication extends Observable implements ConferenceServi
     
     @Override
     public void shutdown() {
-        heartbeatMonitor.stop();
+		if ((manager != null) ) {
+			Client c = manager.getESLClient();
+			if((c != null ) && c.canSend()) {
+				log.info("Logging off fom [" + manager.toString() + "]");
+				manager.disconnect();
+            }
+		}
+    	
+    	if(heartbeatMonitor != null)
+    		heartbeatMonitor.stop();
     }
 
     @Override

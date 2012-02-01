@@ -1,4 +1,4 @@
-package org.bigbluebutton.conference.service.messaging;
+package org.bigbluebutton.voiceconf.red5.messaging;
 
 public class MessagingConstants {
 	//BigBlueButton Pattern

@@ -233,6 +233,12 @@ public class RoomsManager {
 		public void presentationUpdates(HashMap<String, String> map) {
 			conversionUpdatesMessageListener.handleReceivedMessage(map);
 		}
+
+		@Override
+		public void handleESLConnection(HashMap<String, String> map) {
+			// TODO Auto-generated method stub
+			
+		}
 		
 	}
 	

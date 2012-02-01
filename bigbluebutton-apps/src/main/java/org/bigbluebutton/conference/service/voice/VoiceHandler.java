@@ -35,7 +35,6 @@ import org.bigbluebutton.webconference.red5.voice.ClientNotifier;
 public class VoiceHandler extends ApplicationAdapter implements IApplication{
 	private static Logger log = Red5LoggerFactory.getLogger(VoiceHandler.class, "bigbluebutton");
 
-	private static final String VOICE = "VOICE";
 	private static final String VOICE_SO = "meetMeUsersSO";
 	private static final String APP = "VOICE";
 

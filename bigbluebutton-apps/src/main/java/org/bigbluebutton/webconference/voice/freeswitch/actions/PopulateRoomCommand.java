@@ -76,7 +76,7 @@ public class PopulateRoomCommand extends FreeswitchCommand {
             
             String responseBody = org.springframework.util.StringUtils.collectionToDelimitedString(response.getBodyLines(), "\n");
 
-            log.debug("xml_list responce\n{}\nEND", responseBody);
+            log.debug("xml_list response\n{}\nEND", responseBody);
 
             //http://mark.koli.ch/2009/02/resolving-orgxmlsaxsaxparseexception-content-is-not-allowed-in-prolog.html
             //This Sux!
@@ -97,11 +97,11 @@ public class PopulateRoomCommand extends FreeswitchCommand {
             }
 
         }catch(SAXException se) {
-            log.error("Cannot parse repsonce. ", se);
+            log.error("Cannot parse response. ", se);
         }catch(ParserConfigurationException pce) {
             log.error("ParserConfigurationException. ", pce);
         }catch (IOException ie) {
-            log.error("Cannot parse repsonce. IO Exception. ", ie);
+            log.error("Cannot parse response. IO Exception. ", ie);
         }
     }
 

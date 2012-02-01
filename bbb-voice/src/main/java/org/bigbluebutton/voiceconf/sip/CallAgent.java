@@ -257,12 +257,14 @@ public class CallAgent extends CallListenerAdapter implements CallStreamObserver
      *  The user has managed to join the conference.
      */ 
     public void onCallAccepted(Call call, String sdp, Message resp) {        
-    	log.debug("Received 200/OK. So user has successfully joined the conference.");        
+    	log.debug("Received 200/OK. So user has successfully joined the conference.");
     	if (!isCurrentCall(call)) return;
         
         log.debug("ACCEPTED/CALL.");
         callState = CallState.UA_ONCALL;
 
+    	clientConnManager.addContact(resp.getContacts().getValue(0));
+        
         setupSdpAndCodec(sdp);
 
         if (userProfile.noOffer) {
