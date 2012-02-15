@@ -65,6 +65,7 @@ public class CallAgent extends CallListenerAdapter implements CallStreamObserver
     }
 
     private CallState callState;
+	private String contact;
 
     public CallAgent(SipProvider sipProvider, SipPeerProfile userProfile, AudioConferenceProvider portProvider, String clientId) {
         this.sipProvider = sipProvider;
@@ -263,7 +264,13 @@ public class CallAgent extends CallListenerAdapter implements CallStreamObserver
         log.debug("ACCEPTED/CALL.");
         callState = CallState.UA_ONCALL;
 
-    	clientConnManager.addContact(resp.getContacts().getValue(0));
+		// the contact contains information about the voice server that has accepted the call
+		if (!resp.getContacts().isEmpty())
+			contact = resp.getContacts().getValue(0);
+		else {
+			log.debug("Something went wrong - the call has been accepted but there's no information about the contact");
+			contact = "";
+		}
         
         setupSdpAndCodec(sdp);
 
@@ -316,7 +323,7 @@ public class CallAgent extends CallListenerAdapter implements CallStreamObserver
 
     private void notifyListenersOnCallConnected(String talkStream, String listenStream) {
     	log.debug("notifyListenersOnCallConnected for {}", clientId);
-    	clientConnManager.joinConferenceSuccess(clientId, talkStream, listenStream, sipCodec.getCodecName());
+    	clientConnManager.joinConferenceSuccess(clientId, talkStream, listenStream, sipCodec.getCodecName(), contact);
     }
   
     private void notifyListenersOnOutgoingCallFailed() {

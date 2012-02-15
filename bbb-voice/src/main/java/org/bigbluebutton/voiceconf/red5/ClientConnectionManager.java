@@ -51,13 +51,20 @@ public class ClientConnectionManager {
 		}
 	}
 	
-	public void joinConferenceSuccess(String clientId, String usertalkStream, String userListenStream, String codec) {
+	public void joinConferenceSuccess(String clientId, String usertalkStream, String userListenStream, String codec, String contact) {
 		ClientConnection cc = clients.get(clientId);
 		if (cc != null) {
 			cc.onJoinConferenceSuccess(usertalkStream, userListenStream, codec);
 		} else {
 			log.warn("Can't find client {} to inform user that she has joined the conference.", clientId);
 		}
+		
+		Map<String, String> map = new HashMap<String, String>();
+		map.put("method", "onCallAccepted");
+		map.put("contact", contact);
+		map.put("clientId", clientId);
+		Gson gson = new Gson();
+		messagingService.send(MessagingConstants.VOICE_CHANNEL, gson.toJson(map));
 	}
 	
 	public void joinConferenceFailed(String clientId) {
@@ -76,17 +83,16 @@ public class ClientConnectionManager {
 		} else {
 			log.warn("Can't find client {} to inform user that she has left the conference.", clientId);
 		}
+
+		Map<String, String> map = new HashMap<String, String>();
+		map.put("method", "onCallClosed");
+		map.put("clientId", clientId);
+		Gson gson = new Gson();
+		messagingService.send(MessagingConstants.VOICE_CHANNEL, gson.toJson(map));
 	}
 	
 	public void setMessagingService(MessagingService messagingService) {
 		this.messagingService = messagingService;
 		this.messagingService.start();
-	}
-	
-	public void addContact(String contact) {
-		Map<String, String> map = new HashMap<String, String>();
-		map.put("add", contact);
-		Gson gson = new Gson();
-		messagingService.send(MessagingConstants.VOICE_CHANNEL, gson.toJson(map));
 	}
 }

@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.bigbluebutton.conference.service.messaging.MessageListener;
 import org.bigbluebutton.conference.service.messaging.MessagingService;
@@ -37,6 +38,7 @@ import org.slf4j.Logger;
 public class FreeswitchServiceProvider implements ConferenceServiceProvider {
 	private static Logger log = Red5LoggerFactory.getLogger(FreeswitchServiceProvider.class, "bigbluebutton");
 	
+	private Map<String, String> hostnameByClientId = new HashMap<String, String>();
 	private Map<String, Integer> appDelegateByHostname = new HashMap<String, Integer>();
 	private Map<String, Integer> appDelegateByRoom = new HashMap<String, Integer>();
 	private List<ConferenceServiceProvider> appDelegate = new ArrayList<ConferenceServiceProvider>();
@@ -115,39 +117,86 @@ public class FreeswitchServiceProvider implements ConferenceServiceProvider {
 
 			@Override
 			public void handleESLConnection(HashMap<String, String> map) {
-				// example: <sip:72702@143.54.12.94:5060;transport=udp>
-				String contact = map.get("add");
-				
-				int firstColon = contact.indexOf(':'),
-						at = contact.indexOf('@'),
-						secondColon = contact.indexOf(':', at);
-				
-				String room = contact.substring(firstColon + 1, at);
-				// if the configured hostname is localhost, it means that the FS
-				// is running in the same server, and it's not listening to the
-				// external IP, so I must change the hostname to localhost
-				String hostname = connection.getHostname().equals("127.0.0.1")? "127.0.0.1": contact.substring(at + 1, secondColon);
-				
-				log.debug("INVITE reply contact: {}", contact);
-				log.debug("FreeSWITCH hostname: {}", hostname);
-				log.debug("FreeSWITCH number: {}", room);
-				
-				Integer id = appDelegateByHostname.get(hostname);
-				ConferenceServiceProvider p = null;
-				if (id == null) {
-					p = new FreeswitchApplication();
-					p.setConferenceEventListener(conferenceEventListener);
-					((FreeswitchApplication) p).setDebugNullConferenceAction(true);
-					((FreeswitchApplication) p).connect(hostname, connection.getPort(), connection.getPassword());
+				log.debug("handleESLConnection parameters: {}", map.toString());
+				String method = map.get("method");
+
+				if (method.equals("onCallAccepted")) {
+					// example: <sip:72702@143.54.12.94:5060;transport=udp>
+					String contact = map.get("contact");
+					String clientId = map.get("clientId");
 					
-					appDelegate.add(p);
-					id = appDelegate.size() - 1;
-					appDelegateByHostname.put(hostname, id);
-				} else {
-					p = appDelegate.get(id);
+					if (hostnameByClientId.containsKey(clientId)) {
+						log.debug("There's already a server handling the voice conference of the client {}", clientId);
+						return;
+					}
+					
+					int firstColon = contact.indexOf(':'),
+							at = contact.indexOf('@'),
+							secondColon = contact.indexOf(':', at);
+					
+					String room = contact.substring(firstColon + 1, at);
+					// if the configured hostname is localhost, it means that the FS
+					// is running in the same server, and it's not listening to the
+					// external IP, so I must change the hostname to localhost
+					String hostname = connection.getHostname().equals("127.0.0.1")? "127.0.0.1": contact.substring(at + 1, secondColon);
+					
+					log.debug("INVITE reply contact: {}", contact);
+					log.debug("FreeSWITCH hostname: {}", hostname);
+					log.debug("FreeSWITCH number: {}", room);
+
+					Integer appIndex = appDelegateByHostname.get(hostname);
+					ConferenceServiceProvider p = null;
+					if (appIndex == null) {
+						log.debug("There's no opened ESL connection with {}, opening...", hostname);
+						p = new FreeswitchApplication();
+						p.setConferenceEventListener(conferenceEventListener);
+						((FreeswitchApplication) p).setDebugNullConferenceAction(true);
+						((FreeswitchApplication) p).connect(hostname, connection.getPort(), connection.getPassword());
+						
+						appDelegate.add(p);
+						appIndex = appDelegate.size() - 1;
+						appDelegateByHostname.put(hostname, appIndex);
+					} else {
+						log.debug("There's already an opened ESL connection with {}", hostname);
+						p = appDelegate.get(appIndex);
+					}
+					appDelegateByRoom.put(room, appIndex);
+					hostnameByClientId.put(clientId, hostname);
+					p.populateRoom(room);
+				} else if (method.equals("onCallClosed")) {
+					String clientId = map.get("clientId");
+					
+					if (!hostnameByClientId.containsKey(clientId)) {
+						log.debug("Can't find the clientId {}, it's most probably a duplicate call", clientId);
+						return;
+					}
+					
+					String hostname = hostnameByClientId.get(clientId);
+					hostnameByClientId.remove(clientId);
+					
+					// Can't close the ESL connection because when the last user
+					// leaves the voice conference, the event of his leaving never 
+					// comes. Instead, the ESL connection should be closed when the room
+					// is destroyed.
+//					if (hostnameByClientId.containsValue(hostname)) {
+//						log.debug("The voice server is serving another clients, don't close the ESL connection");
+//					} else {
+//						log.debug("Closing the ESL connection with {}", hostname);
+//						int appIndex = appDelegateByHostname.remove(hostname);
+//						ConferenceServiceProvider p = appDelegate.get(appIndex);
+//						p.shutdown();
+//						appDelegate.remove(appIndex);
+//						
+//						List<String> toRemove = new ArrayList<String>();
+//						for (Entry<String, Integer> entry : appDelegateByRoom.entrySet()) {
+//							if (entry.getValue().equals(appIndex))
+//								toRemove.add(entry.getKey());
+//						}
+//						for (String key : toRemove) {
+//							appDelegateByRoom.remove(key);
+//						}
+//					}
 				}
-				appDelegateByRoom.put(room, id);
-				p.populateRoom(room);
 			}
 		});
 		this.messagingService.start();
