@@ -367,7 +367,7 @@ public class FreeswitchApplication extends Observable implements ConferenceServi
     {
         return e.getEventHeaders().get("Caller-Caller-ID-Name");
     }
-    
+
     private String getRecordFilenameFromEvent(EslEvent e) {
     	return e.getEventHeaders().get("Path");
     }

@@ -1154,6 +1154,7 @@ class ApiController {
             returncode(RESP_CODE_SUCCESS)
 			meetingName(meeting.getName())
             meetingID(meeting.getExternalId())
+            internalMeetingID(meeting.getInternalId())
 			createTime(meeting.getCreateTime())
 			voiceBridge(meeting.getTelVoice())
             attendeePW(meeting.getViewerPassword())
@@ -1166,12 +1167,16 @@ class ApiController {
             participantCount(meeting.getNumUsers())
             maxUsers(meeting.getMaxUsers())
             moderatorCount(meeting.getNumModerators())
+            listenerCount(meeting.getNumListeners())
             attendees() {
               meeting.getUsers().each { att ->
                 attendee() {
                   userID("${att.externalUserId}")
                   fullName("${att.fullname}")
                   role("${att.role}")
+                  isPresenter("${att.isPresenter()}")
+                  hasVideoStream("${att.hasStream()}")
+                  videoStreamName("${att.getStreamName()}")
                 }
               }
             }

@@ -30,8 +30,8 @@ public class ParticipantJoinedEvent extends ConferenceEvent {
 	private final Boolean locked = false;
 	
 	public ParticipantJoinedEvent(Integer participantId, String room, 
-								String callerIdNum, String callerIdName,
-								Boolean muted, Boolean speaking) {
+				      String callerIdNum, String callerIdName,
+				      Boolean muted, Boolean speaking) {
 		super(participantId, room);
 		this.callerIdName = callerIdName;
 		this.callerIdNum = callerIdNum;
