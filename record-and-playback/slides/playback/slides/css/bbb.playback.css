@@ -26,7 +26,8 @@ br{
 }
 
 #slide{
-	background-image:url('../images/logo.png');
+	background-image: url('../logo.png');
+	text-align: center;
 }
 
 

@@ -15,7 +15,7 @@
         });
         return map; 
       }
-     
+
       var audio;
       var slides;
       var params = getUrlParameters();
@@ -23,6 +23,20 @@
       var HOST = window.location.hostname;
       var RECORDINGS = "http://" + HOST + "/slides/" + MEETINGID;
       var SLIDES_XML = "http://" + HOST + "/slides/" + MEETINGID + '/slides.xml';
+
+      if (window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari
+        xmlhttp=new XMLHttpRequest();
+      } else {// code for IE6, IE5
+        xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+      }
+      xmlhttp.open("GET",SLIDES_XML,false);
+      xmlhttp.send();
+      xmlDoc = xmlhttp.responseXML;
+      xmlList = xmlDoc.getElementsByTagName("image")
+      for (var i = 0; i < xmlList.length; i++) {
+        console.log(xmlList[i].getAttribute("src"))
+      }
+      
       var appName = navigator.appName;
 	  var appVersion = navigator.appVersion;
 	  audio = document.getElementById("audioRecording");
