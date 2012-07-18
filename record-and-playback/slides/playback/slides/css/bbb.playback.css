@@ -1,9 +1,9 @@
 html{
-	height:100%;
 }
 body {
 	font-family: Verdana;
-	height:100%;
+	background: #eee;
+	padding-top: 30px;
 }
 h1 {
 	text-align:center
@@ -12,41 +12,55 @@ br{
 	display:none
 }
 
-#playbackArea{
-	width: 800px;
-	height: 700px;
-	margin-left: auto;
-	margin-right: auto;
+/*
+ * clearfix
+ * see: http://css-tricks.com/snippets/css/clear-fix/
+ */
+.clearfix:after {
+	visibility: hidden;
+	display: block;
+	font-size: 0;
+	content: " ";
+	clear: both;
+	height: 0;
+}
+* html .clearfix             { zoom: 1; } /* IE6 */
+*:first-child+html .clearfix { zoom: 1; } /* IE7 */
+
+#playbackArea {
+	width: 1220px; /* #slide.width + #chat.width */
+	margin: 0 auto;
 }
 
 #audioRecording{
 	display: block;
 	margin-left: auto;
 	margin-right: auto;
+	width: 100%;
 }
 
-#slide{
+#presentation {
+	float: left;
+	position: relative;
+}
+
+#slide {
 	background-image: url('../logo.png');
 	text-align: center;
+	border: 1px solid #ccc;
+	width: 800px;
+	height: 600px; /* same as slide images */
 }
 
 
 .chatcontainer{
-	width:420px;
-	height:600px;
-	margin-left: auto;
-    margin-right: auto;
-	position: relative;
-	top:-650px;
-	left:610px;
+	float: right;
+	background: white;
 }
 #chat{
-	margin-left: auto;
-	margin-right: auto;
-	position:relative;
-	top:5px;
-	padding-left:10px;
-	padding-right:10px;
+	margin: 0 auto;
+	padding: 0 10px;
+	border: 1px solid #ccc;
 }
 #chat div p{
 	margin-bottom:-10px;
@@ -56,18 +70,31 @@ br{
 #big {display:none}
 #mid {display:none}
 
-.thumbnail{
-  height: 100px;
-  width: auto;
-  border: 1px solid #000000;
-  margin: 5px;
+#thumbnails {
+	display: none;
+	clear: both;
+	width: 800px; /* same as #slide */
+	position: absolute;
+	bottom: 35px;
+	height: 135px;
+	background: #ddd;
+	border-top: 1px solid #bbb;
+	white-space: nowrap;
+	overflow: auto;
+}
+
+#thumbnails .thumbnail {
+	height: 100px;
+	width: auto;
+	border: 1px solid #bbb;
+	margin: 5px;
+	cursor: pointer;
 }
 
 #footer{
-        margin-left: auto;
-        margin-right: auto;
+        margin: 20px auto;
         font-size:0.75em;
         color: #666;
-
         text-align: center;
+        clear: both;
 }

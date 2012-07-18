@@ -5,7 +5,44 @@
   <title>BigBlueButton Slides Playback</title>
   <meta http-equiv="X-UA-Compatible" content="chrome=1">
   <link rel="stylesheet" href="css/bbb.playback.css">
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
   <script type="text/javascript">
+
+    setTitleOnThumbnails = function() {
+      $(".thumbnail").each(function() {
+          var src = $(this).attr("src")
+          if (src !== undefined) {
+              var num = "?";
+              var name = "undefined";
+              var match = src.match(/slide-(.*).png/)
+              if (match) { num = match[1]; }
+              match = src.match(/([^/]*)\/slide-.*\.png/)
+              if (match) { name = match[1]; }
+              $(this).attr("title", name + " (" + num + ")")
+          }
+      });
+    }
+
+    setupThumbnails = function() {
+      // show/hidex thumbnails
+      var $thumbs = $("#thumbnails");
+      var timeoutId;
+      var thumbOver = function() {
+          $thumbs.show();
+          clearTimeout(timeoutId);
+      }
+      var thumbOut = function() {
+          timeoutId = setTimeout(function(){
+              $thumbs.hide(150);
+          }, 150);
+      }
+      $("#audioRecording").on("mouseover", thumbOver);
+      $("#audioRecording").on("mouseout", thumbOut);
+      $("#thumbnails").on("mouseover", thumbOver);
+      $("#thumbnails").on("mouseout", thumbOut);
+
+      setTitleOnThumbnails();
+    }
 
     document.addEventListener( "DOMContentLoaded", function() {
       function getUrlParameters() {
@@ -39,55 +76,61 @@
       xmlhttp.open("GET",SLIDES_XML,false);
       xmlhttp.send();
       xmlDoc = xmlhttp.responseXML;
-      xmlList = xmlDoc.getElementsByTagName("image")
+      xmlList = xmlDoc.getElementsByTagName("image");
       for (var i = 0; i < xmlList.length; i++) {
-        var img = new Image();
-        img.src = xmlList[i].getAttribute("src");
-        img.onclick = getJumpFunction(xmlList[i].getAttribute("in"));
-        img.className = "thumbnail";
-        document.getElementById("thumbnails").appendChild(img);
+          var img = new Image();
+          img.src = xmlList[i].getAttribute("src");
+          if (img.src.match(/\/slides\/.*slide-.*\.png/)) {
+              img.onclick = getJumpFunction(xmlList[i].getAttribute("in"));
+              img.className = "thumbnail";
+              document.getElementById("thumbnails").appendChild(img);
+          }
       }
       
       var appName = navigator.appName;
-	  var appVersion = navigator.appVersion;
-	  audio = document.getElementById("audioRecording");
-	  if(appName == "Microsoft Internet Explorer" ){
-		if( navigator.userAgent.match("chromeframe")){
-	  	  audio.setAttribute('src', RECORDINGS + '/audio/audio.ogg');
-        	  audio.setAttribute('type','audio/ogg');
-		}else{
-		  var message = "To support this playback please install 'Google Chrome Frame', or use other browser: Firefox, Safari, Chrome, Opera";
-  		  var line = document.createElement("p");
-		  var link = document.createElement("a");
-		  line.appendChild(document.createTextNode(message));
-                  link.setAttribute("href", "http://www.google.com/chromeframe")
-                  link.setAttribute("target", "_blank")
-                  link.appendChild(document.createTextNode("Install Google Chrome Frame"));
-		  document.getElementById("chat").appendChild(line);
-		  document.getElementById("chat").appendChild(link);
-		}
-	  }else if (appVersion.match("Safari") != null && appVersion.match("Chrome") == null){
-	  	audio.setAttribute('src', RECORDINGS + '/audio/recording.wav');
-	        audio.setAttribute('type','audio/x-wav');
-	  }else {
-		audio.setAttribute('src', RECORDINGS + '/audio/audio.ogg');
-        	audio.setAttribute('type','audio/ogg');
-	  }	
-	  audio.setAttribute('data-timeline-sources', SLIDES_XML) 
-	}, false);
+      var appVersion = navigator.appVersion;
+      audio = document.getElementById("audioRecording");
+      if(appName == "Microsoft Internet Explorer" ){
+          if( navigator.userAgent.match("chromeframe")){
+	      audio.setAttribute('src', RECORDINGS + '/audio/audio.ogg');
+              audio.setAttribute('type','audio/ogg');
+	  }else{
+              var message = "To support this playback please install 'Google Chrome Frame', or use other browser: Firefox, Safari, Chrome, Opera";
+              var line = document.createElement("p");
+              var link = document.createElement("a");
+              line.appendChild(document.createTextNode(message));
+              link.setAttribute("href", "http://www.google.com/chromeframe")
+              link.setAttribute("target", "_blank")
+              link.appendChild(document.createTextNode("Install Google Chrome Frame"));
+              document.getElementById("chat").appendChild(line);
+              document.getElementById("chat").appendChild(link);
+          }
+      }else if (appVersion.match("Safari") != null && appVersion.match("Chrome") == null){
+          audio.setAttribute('src', RECORDINGS + '/audio/recording.wav');
+          audio.setAttribute('type','audio/x-wav');
+      }else {
+          audio.setAttribute('src', RECORDINGS + '/audio/audio.ogg');
+          audio.setAttribute('type','audio/ogg');
+      }
+      audio.setAttribute('data-timeline-sources', SLIDES_XML);
+
+      setupThumbnails();
+    }, false);
   </script>
   <script src="lib/popcorn-complete.min.js"></script>
 </head>
 <body>
-	<div id="playbackArea">
-		<div style="width:800px; height:650px;" id="slide"></div> 
-		<audio id="audioRecording" controls > You must use an HTML5 capable browser to view this page.
-		This playback requires modern browser, please use FF, Safari, Chrome</audio>
+	<div id="playbackArea" class="clearfix">
+		<div id="presentation">
+			<div id="slide"></div>
+			<audio id="audioRecording" controls> You must use an HTML5 capable browser to view this page.
+			This playback requires modern browser, please use FF, Safari, Chrome</audio>
+			<div id="thumbnails"></div>
+		</div>
 		<div class="chatcontainer">
 			<div id="chat"></div>			
 		</div>
 	</div>
-	<div id="thumbnails" style="text-align: center;"></div>
 	<p id="footer">Recorded with <a href="http://bigbluebutton.org/">BigBlueButton</a>.</p>
 </body>
 </html>
