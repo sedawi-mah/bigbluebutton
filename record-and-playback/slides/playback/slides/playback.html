@@ -15,6 +15,13 @@
         });
         return map; 
       }
+      
+      function getJumpFunction(time) {
+        return function() {
+          var pop = Popcorn("#audioRecording");
+          pop.currentTime(time);
+        }
+      }
 
       var audio;
       var slides;
@@ -34,7 +41,11 @@
       xmlDoc = xmlhttp.responseXML;
       xmlList = xmlDoc.getElementsByTagName("image")
       for (var i = 0; i < xmlList.length; i++) {
-        console.log(xmlList[i].getAttribute("src"))
+        var img = new Image();
+        img.src = xmlList[i].getAttribute("src");
+        img.onclick = getJumpFunction(xmlList[i].getAttribute("in"));
+        img.className = "thumbnail";
+        document.getElementById("thumbnails").appendChild(img);
       }
       
       var appName = navigator.appName;
@@ -76,6 +87,7 @@
 			<div id="chat"></div>			
 		</div>
 	</div>
+	<div id="thumbnails" style="text-align: center;"></div>
 	<p id="footer">Recorded with <a href="http://bigbluebutton.org/">BigBlueButton</a>.</p>
 </body>
 </html>

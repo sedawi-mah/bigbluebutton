@@ -56,6 +56,13 @@ br{
 #big {display:none}
 #mid {display:none}
 
+.thumbnail{
+  height: 100px;
+  width: auto;
+  border: 1px solid #000000;
+  margin: 5px;
+}
+
 #footer{
         margin-left: auto;
         margin-right: auto;
