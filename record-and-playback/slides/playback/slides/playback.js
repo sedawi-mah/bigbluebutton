@@ -1,3 +1,8 @@
+goToSlide = function(time) {
+  var pop = Popcorn("#audioRecording");
+  pop.currentTime(time);
+}
+
 getUrlParameters = function() {
   var map = {};
   var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
@@ -11,48 +16,86 @@ var MEETINGID = params['meetingId'];
 var RECORDINGS = "/slides/" + MEETINGID;
 var SLIDES_XML = "/slides/" + MEETINGID + '/slides.xml';
 
-setTitleOnThumbnails = function() {
-  $(".thumbnail").each(function() {
-    var src = $(this).attr("src")
-    if (src !== undefined) {
-      var num = "?";
-      var name = "undefined";
-      var match = src.match(/slide-(.*).png/)
-      if (match) { num = match[1]; }
-      match = src.match(/([^/]*)\/slide-.*\.png/)
-      if (match) { name = match[1]; }
-      $(this).attr("title", name + " (" + num + ")")
+/*
+ * Sets the title attribute in a thumbnail.
+ */
+setTitleOnThumbnail = function($thumb) {
+  var src = $thumb.attr("src")
+  if (src !== undefined) {
+    var num = "?";
+    var name = "undefined";
+    var match = src.match(/slide-(.*).png/)
+    if (match) { num = match[1]; }
+    match = src.match(/([^/]*)\/slide-.*\.png/)
+    if (match) { name = match[1]; }
+    $thumb.attr("title", name + " (" + num + ")")
+  }
+}
+
+/*
+ * Sets the click event in a thumbnail to change the
+ * current slide in popcorn.
+ */
+setChangeSlideOnThumbnail = function($thumb) {
+  $thumb.on("click", function() {
+    goToSlide($thumb.attr("data-in"));
+  });
+}
+
+/*
+ * Associates popcorn events with a thumbnail to make it
+ * active (mark it) when the slide is being shown. 
+ */
+setMarkThumbnailOnSlideChange = function($thumb) {
+  var timeIn = $thumb.attr("data-in");
+  var timeOut = $thumb.attr("data-out");
+  var pop = Popcorn("#audioRecording");
+  pop.code({
+    start: timeIn,
+    end: timeOut,
+    onStart: function( options ) {
+      $("#thumbnail-" + options.start).parent().addClass("active");
+    },
+    onEnd: function( options ) {
+      $("#thumbnail-" + options.start).parent().removeClass("active");
     }
   });
 }
 
-goToSlide = function(time) {
-  return function() {
-    var pop = Popcorn("#audioRecording");
-    pop.currentTime(time);
-  }
-}
-
+/*
+ * Generates the list of thumbnails using slides.xml
+ */
 generateThumbnails = function() {
   if (window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari
-    xmlhttp=new XMLHttpRequest();
+    xmlhttp = new XMLHttpRequest();
   } else {// code for IE6, IE5
-    xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+    xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
   }
-  xmlhttp.open("GET",SLIDES_XML,false);
+  xmlhttp.open("GET", SLIDES_XML, false);
   xmlhttp.send();
   xmlDoc = xmlhttp.responseXML;
   xmlList = xmlDoc.getElementsByTagName("image");
   for (var i = 0; i < xmlList.length; i++) {
-    var img = new Image();
-    img.src = xmlList[i].getAttribute("src");
-    if (img.src.match(/\/slides\/.*slide-.*\.png/)) {
-      img.onclick = goToSlide(xmlList[i].getAttribute("in"));
-      img.className = "thumbnail";
-      document.getElementById("thumbnails").appendChild(img);
+    img = $(document.createElement('img'));
+    var src = xmlList[i].getAttribute("src");
+    if (src.match(/\/slides\/.*slide-.*\.png/)) {
+      var timeIn = xmlList[i].getAttribute("in");
+      var timeOut = xmlList[i].getAttribute("out");
+      img.attr("src", src);
+      img.attr("id", "thumbnail-" + timeIn);
+      img.attr("data-in", timeIn);
+      img.attr("data-out", timeOut);
+      img.addClass("thumbnail");
+      setMarkThumbnailOnSlideChange(img);
+      setChangeSlideOnThumbnail(img);
+      setTitleOnThumbnail(img);
+      // a wrapper around the img
+      var div = $(document.createElement('div'));
+      div.addClass("thumbnail-wrapper");
+      div.append(img);
+      $("#thumbnails").append(div);
     }
   }
-  setTitleOnThumbnails();
 }
 
 document.addEventListener( "DOMContentLoaded", function() {

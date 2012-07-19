@@ -95,12 +95,26 @@ br{
 	overflow-x: hidden;
 }
 
-#thumbnails .thumbnail {
+#thumbnails img.thumbnail {
 	width: 100px;
 	height: auto;
-	border: 1px solid #bbb;
+	border: 1px solid #eee;
 	margin: 5px;
 	cursor: pointer;
+	vertical-align: bottom;
+}
+
+#thumbnails .thumbnail-wrapper {
+	margin: 0;
+	padding: 0;
+}
+
+#thumbnails .thumbnail-wrapper.active {
+	background-color: #D9EDF7;
+}
+
+#thumbnails .thumbnail-wrapper.active img.thumbnail {
+	border-color: #3A87AD;
 }
 
 #footer{
