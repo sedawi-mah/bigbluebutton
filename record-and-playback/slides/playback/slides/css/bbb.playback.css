@@ -28,7 +28,7 @@ br{
 *:first-child+html .clearfix { zoom: 1; } /* IE7 */
 
 #playbackArea {
-	width: 1220px; /* #slide.width + #chat.width */
+	width: 1360px; /* #slide.width + #chat.width + #audioRecording.width */
 	margin: 0 auto;
 }
 
@@ -37,6 +37,20 @@ br{
 	margin-left: auto;
 	margin-right: auto;
 	width: 100%;
+}
+
+/* To remove the white space on top of the audio tag in Firefox
+ * See: http://stackoverflow.com/questions/9527453/firefox-and-html5-audio-element-dont-play-well-together
+ */
+@-moz-document url-prefix() {
+	#audioRecordingWrapper{
+		position: relative;
+		height: 28px;
+	}
+	#audioRecording {
+		position: absolute;
+		bottom: 0;
+	}
 }
 
 #presentation {
@@ -71,21 +85,19 @@ br{
 #mid {display:none}
 
 #thumbnails {
-	display: none;
-	clear: both;
-	width: 800px; /* same as #slide */
-	position: absolute;
-	bottom: 35px;
-	height: 135px;
-	background: #ddd;
-	border-top: 1px solid #bbb;
-	white-space: nowrap;
-	overflow: auto;
+	float: left;
+	width: 130px;
+	height: 600px; /* same as #slide */
+	background: #fff;
+	border: 1px solid #bbb;
+	margin-right: 10px;
+	overflow-y: scroll;
+	overflow-x: hidden;
 }
 
 #thumbnails .thumbnail {
-	height: 100px;
-	width: auto;
+	width: 100px;
+	height: auto;
 	border: 1px solid #bbb;
 	margin: 5px;
 	cursor: pointer;
