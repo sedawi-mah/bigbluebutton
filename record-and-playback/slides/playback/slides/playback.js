@@ -11,6 +11,22 @@ getUrlParameters = function() {
   return map;
 }
 
+/*
+ * Converts seconds to HH:MM:SS
+ * From: http://stackoverflow.com/questions/6312993/javascript-seconds-to-time-with-format-hhmmss#6313008
+ */
+secondsToHHMMSS = function(secs) {
+  var hours   = Math.floor(secs / 3600);
+  var minutes = Math.floor((secs - (hours * 3600)) / 60);
+  var seconds = secs - (hours * 3600) - (minutes * 60);
+
+  if (hours   < 10) {hours   = "0"+hours;}
+  if (minutes < 10) {minutes = "0"+minutes;}
+  if (seconds < 10) {seconds = "0"+seconds;}
+  var time    = hours+':'+minutes+':'+seconds;
+  return time;
+}
+
 var params = getUrlParameters();
 var MEETINGID = params['meetingId'];
 var RECORDINGS = "/slides/" + MEETINGID;
@@ -33,20 +49,11 @@ setTitleOnThumbnail = function($thumb) {
 }
 
 /*
- * Sets the click event in a thumbnail to change the
- * current slide in popcorn.
+ * Associates several events on a thumbnail, e.g. click to change slide,
+ * mouse over/out functions, etc.
  */
-setChangeSlideOnThumbnail = function($thumb) {
-  $thumb.on("click", function() {
-    goToSlide($thumb.attr("data-in"));
-  });
-}
-
-/*
- * Associates popcorn events with a thumbnail to make it
- * active (mark it) when the slide is being shown. 
- */
-setMarkThumbnailOnSlideChange = function($thumb) {
+setEventsOnThumbnail = function($thumb) {
+  // Popcorn event to mark a thumbnail when its slide is being shown
   var timeIn = $thumb.attr("data-in");
   var timeOut = $thumb.attr("data-out");
   var pop = Popcorn("#audioRecording");
@@ -54,10 +61,31 @@ setMarkThumbnailOnSlideChange = function($thumb) {
     start: timeIn,
     end: timeOut,
     onStart: function( options ) {
-      $("#thumbnail-" + options.start).parent().addClass("active");
+      $parent = $("#thumbnail-" + options.start).parent();
+      $parent.addClass("active");
+      $(".thumbnail-label", $parent).show();
     },
     onEnd: function( options ) {
-      $("#thumbnail-" + options.start).parent().removeClass("active");
+      $parent = $("#thumbnail-" + options.start).parent();
+      $parent.removeClass("active");
+      $(".thumbnail-label", $parent).hide();
+    }
+  });
+
+  // Click on thumbnail changes the slide in popcorn
+  $thumb.on("click", function() {
+    goToSlide($thumb.attr("data-in"));
+  });
+
+
+  // Mouse over/out to show/hide the label over the thumbnail
+  $wrapper = $thumb.parent();
+  $wrapper.on("mouseover", function() {
+    $(".thumbnail-label", $(this)).show();
+  });
+  $wrapper.on("mouseout", function() {
+    if (!$(this).hasClass("active")) {
+      $(".thumbnail-label", $(this)).hide();
     }
   });
 }
@@ -86,14 +114,22 @@ generateThumbnails = function() {
       img.attr("data-in", timeIn);
       img.attr("data-out", timeOut);
       img.addClass("thumbnail");
-      setMarkThumbnailOnSlideChange(img);
-      setChangeSlideOnThumbnail(img);
-      setTitleOnThumbnail(img);
-      // a wrapper around the img
+
+      // a label with the time the slide starts
+      var label = $(document.createElement('span'));
+      label.addClass("thumbnail-label");
+      label.html(secondsToHHMMSS(timeIn));
+
+      // a wrapper around the img and label
       var div = $(document.createElement('div'));
       div.addClass("thumbnail-wrapper");
+
       div.append(img);
+      div.append(label);
       $("#thumbnails").append(div);
+
+      setEventsOnThumbnail(img);
+      setTitleOnThumbnail(img);
     }
   }
 }
