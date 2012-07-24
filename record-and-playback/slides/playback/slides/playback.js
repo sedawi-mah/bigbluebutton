@@ -1,5 +1,5 @@
 goToSlide = function(time) {
-  var pop = Popcorn("#audioRecording");
+  var pop = Popcorn("#videoRecording");
   pop.currentTime(time);
 }
 
@@ -56,7 +56,7 @@ setEventsOnThumbnail = function($thumb) {
   // Popcorn event to mark a thumbnail when its slide is being shown
   var timeIn = $thumb.attr("data-in");
   var timeOut = $thumb.attr("data-out");
-  var pop = Popcorn("#audioRecording");
+  var pop = Popcorn("#videoRecording");
   pop.code({
     start: timeIn,
     end: timeOut,
@@ -135,14 +135,14 @@ generateThumbnails = function() {
 }
 
 document.addEventListener( "DOMContentLoaded", function() {
-  var audio;
+  var video;
   var appName = navigator.appName;
   var appVersion = navigator.appVersion;
-  audio = document.getElementById("audioRecording");
+  video = document.getElementById("videoRecording");
   if (appName == "Microsoft Internet Explorer") {
     if (navigator.userAgent.match("chromeframe")) {
-      audio.setAttribute('src', RECORDINGS + '/audio/audio.ogg');
-      audio.setAttribute('type','audio/ogg');
+      video.setAttribute('src', RECORDINGS + '/video/webcams.mp4');
+      video.setAttribute('type','video/mp4');
     } else {
       var message = "To support this playback please install 'Google Chrome Frame', or use other browser: Firefox, Safari, Chrome, Opera";
       var line = document.createElement("p");
@@ -155,13 +155,13 @@ document.addEventListener( "DOMContentLoaded", function() {
       document.getElementById("chat").appendChild(link);
     }
   } else if (appVersion.match("Safari") != null && appVersion.match("Chrome") == null) {
-    audio.setAttribute('src', RECORDINGS + '/audio/recording.wav');
-    audio.setAttribute('type','audio/x-wav');
+    video.setAttribute('src', RECORDINGS + '/video/webcams.mp4');
+    video.setAttribute('type','video/mp4');
   } else {
-    audio.setAttribute('src', RECORDINGS + '/audio/audio.ogg');
-    audio.setAttribute('type','audio/ogg');
+    video.setAttribute('src', RECORDINGS + '/video/webcams.mp4');
+    video.setAttribute('type','video/mp4');
   }
-  audio.setAttribute('data-timeline-sources', SLIDES_XML);
+  video.setAttribute('data-timeline-sources', SLIDES_XML);
 
   generateThumbnails();
 }, false);

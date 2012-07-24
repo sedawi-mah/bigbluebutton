@@ -42,12 +42,16 @@ if (playback == "slides")
 		audio_dir = "#{package_dir}/audio"
 		FileUtils.mkdir_p audio_dir
 		
+		video_dir = "#{package_dir}/video"
+		FileUtils.mkdir_p video_dir
+		
 		FileUtils.cp("#{process_dir}/audio.ogg", audio_dir)
 		FileUtils.cp("#{process_dir}/temp/#{meeting_id}/audio/recording.wav", audio_dir)
+		FileUtils.cp("#{process_dir}/webcams.mp4", video_dir)
 		FileUtils.cp("#{process_dir}/events.xml", package_dir)
 		FileUtils.cp_r("#{process_dir}/presentation", package_dir)
 
-                BigBlueButton.logger.info("Creating metadata.xml")
+    BigBlueButton.logger.info("Creating metadata.xml")
 		# Create metadata.xml
 		b = Builder::XmlMarkup.new(:indent => 2)		 
 		metaxml = b.recording {
@@ -71,7 +75,6 @@ if (playback == "slides")
 		metadata_xml.close		
     BigBlueButton.logger.info("Generating xml for slides and chat")		
     #Create slides.xml
-    #presentation_url = "http://" + playback_host + "/slides/" + meeting_id + "/presentation"
     presentation_url = "/slides/" + meeting_id + "/presentation"
   	@doc = Nokogiri::XML(File.open("#{process_dir}/events.xml"))
 	  meeting_start = @doc.xpath("//event[@eventname='ParticipantJoinEvent']")[0]['timestamp']

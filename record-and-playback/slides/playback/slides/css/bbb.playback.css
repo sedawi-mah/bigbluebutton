@@ -39,6 +39,10 @@ br{
 	width: 100%;
 }
 
+#videoRecording{
+  width: 402px;
+}
+
 /* To remove the white space on top of the audio tag in Firefox
  * See: http://stackoverflow.com/questions/9527453/firefox-and-html5-audio-element-dont-play-well-together
  */
@@ -70,16 +74,18 @@ br{
 .chatcontainer{
 	float: right;
 	background: white;
+	height: 300px; 
 }
 #chat{
 	margin: 0 auto;
 	padding: 0 10px;
 	border: 1px solid #ccc;
+	height: 300px;
 }
 #chat div p{
 	margin-bottom:-10px;
 	padding:0px;
-	font-size:13px
+	font-size:13px;
 }
 #big {display:none}
 #mid {display:none}

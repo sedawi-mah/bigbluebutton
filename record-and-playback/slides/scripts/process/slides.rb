@@ -57,10 +57,12 @@ if not FileTest.directory?(target_dir)
          end
     else
         ext = File.extname("#{images[0]}")
-	BigBlueButton::Presentation.convert_image_to_png(images[0],"#{target_pres_dir}/slide-1.png")
+        BigBlueButton::Presentation.convert_image_to_png(images[0],"#{target_pres_dir}/slide-1.png")
     end
   
   end
+  
+  BigBlueButton.process_videos(target_dir, temp_dir, meeting_id)
   
 	process_done = File.new("#{recording_dir}/status/processed/#{meeting_id}-slides.done", "w")
   process_done.write("Processed #{meeting_id}")
