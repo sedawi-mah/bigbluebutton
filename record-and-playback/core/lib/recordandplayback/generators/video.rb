@@ -12,7 +12,7 @@ module BigBlueButton
   #    strip_audio_from_video(orig-video.flv, video2.flv)
   def self.strip_audio_from_video(video_in, video_out)
     BigBlueButton.logger.info("Task: Stripping audio from video")      
-    command = "ffmpeg -i #{video_in} -loglevel fatal -v -10 -an -vcodec copy #{video_out}"
+    command = "ffmpeg -i #{video_in} -loglevel fatal -an -vcodec copy #{video_out}"
     BigBlueButton.execute(command)
     # TODO: check for result, raise an exception when there is an error
   end
@@ -52,7 +52,7 @@ module BigBlueButton
   #   create_blank_video(15, 1000, canvas.jpg, blank-video.flv)
   def self.create_blank_video(length, rate, blank_canvas, video_out)
     BigBlueButton.logger.info("Task: Creating blank video")      
-    command = "ffmpeg -loop_input -t #{length} -i #{blank_canvas} -loglevel fatal -v -10 -r #{rate} #{video_out}"
+    command = "ffmpeg -y -loop_input -t #{length} -i #{blank_canvas} -loglevel fatal -v -10 -r #{rate} #{video_out}"
     BigBlueButton.execute(command)
     # TODO: check for result, raise exception when there is an error
   end
@@ -88,9 +88,13 @@ module BigBlueButton
    
     #Create .mpg files
     mpgs = []
-    videos_in.each do |flv| 
-        mpg =  "#{flv}.mpg"
-        BigBlueButton.convert_flv_to_mpg(flv,mpg)
+    videos_in.each do |flv|
+        if File.extname(flv) == ".mpg"
+            mpg = flv
+        else
+            mpg = "#{flv}.mpg"
+            BigBlueButton.convert_flv_to_mpg(flv,mpg)
+        end
         mpgs << mpg
     end
     
@@ -285,7 +289,7 @@ module BigBlueButton
   end
   
   def self.fit_to(width, height, fit_width, fit_height)
-    BigBlueButton.logger.info("Fitting the video to width #{fit_width} and height #{fit_height}")
+    BigBlueButton.logger.info("Fitting the video resolution from #{width}x#{height} to #{fit_width}x#{fit_height}")
     aspect_ratio = width / height.to_f
     if fit_width / fit_height.to_f > aspect_ratio
       height = fit_height
@@ -333,9 +337,9 @@ module BigBlueButton
     webcams = []
     paddings.concat(matched_evts).sort{|a,b| a[:start_timestamp] <=> b[:start_timestamp]}.each do |comb|
       if (comb[:gap])
-        blank_flv = "#{temp_dir}/#{comb[:stream]}"
-        webcams << blank_flv
-        BigBlueButton.create_blank_video((comb[:stop_timestamp] - comb[:start_timestamp].to_f)/1000.0, 1000, blank_canvas, blank_flv)
+        blank_video = "#{temp_dir}/#{comb[:stream]}"
+        webcams << blank_video
+        BigBlueButton.create_blank_video((comb[:stop_timestamp] - comb[:start_timestamp].to_f)/1000.0, 1000, blank_canvas, blank_video)
       else
         stripped_webcam = "#{temp_dir}/stripped-wc-#{comb[:stream]}.flv"
         BigBlueButton.strip_audio_from_video("#{video_dir}/#{comb[:stream]}.flv", stripped_webcam)
@@ -350,12 +354,8 @@ module BigBlueButton
         side_padding = ((MAX_VID_WIDTH - width) / 2).to_i
         top_bottom_padding = ((MAX_VID_HEIGHT - height) / 2).to_i
  
-        # Use for newer version of FFMPEG
         padding = "-vf pad=#{MAX_VID_WIDTH}:#{MAX_VID_HEIGHT}:#{side_padding}:#{top_bottom_padding}:FFFFFF"       
         command = "ffmpeg -i #{stripped_webcam} -loglevel fatal -v -10 -aspect 4:3 -r 1000 -sameq #{frame_size} #{padding} #{scaled_flv}" 
-        #BigBlueButton.logger.info(command)
-        #IO.popen(command)
-        #Process.wait                
         BigBlueButton.execute(command)  
       end
     end
@@ -383,9 +383,9 @@ module BigBlueButton
     flvs = []
     paddings.concat(matched_evts).sort{|a,b| a[:start_timestamp] <=> b[:start_timestamp]}.each do |comb|
       if (comb[:gap])
-        blank_flv = "#{temp_dir}/#{comb[:stream]}"
-        flvs << blank_flv
-        BigBlueButton.create_blank_deskshare_video((comb[:stop_timestamp] - comb[:start_timestamp].to_f)/1000, 1000, blank_canvas, blank_flv)
+        blank_video = "#{temp_dir}/#{comb[:stream]}"
+        flvs << blank_video
+        BigBlueButton.create_blank_deskshare_video((comb[:stop_timestamp] - comb[:start_timestamp].to_f)/1000, 1000, blank_canvas, blank_video)
       else
         scaled_flv = "#{temp_dir}/#{meeting_id}/deskshare/scaled-#{comb[:stream]}"
         flvs << scaled_flv
@@ -477,12 +477,10 @@ module BigBlueButton
       event = timeline[i]
       
       if past_event[:webcams].empty?
-        blank_flv = "#{temp_dir}/#{meeting_id}/video#{i}.flv"
-        webcams << blank_flv
-        BigBlueButton.create_blank_video((event[:timestamp] - past_event[:timestamp].to_f)/1000.0, 1000, blank_canvas, blank_flv)
+        blank_video = "#{temp_dir}/#{meeting_id}/video#{i}.flv"
+        webcams << blank_video
+        BigBlueButton.create_blank_video((event[:timestamp] - past_event[:timestamp].to_f)/1000.0, 1000, blank_canvas, blank_video)
       else
-        tmp_webcams = []
-
         # try to find the number of rows to maximize the internal videos
         each_row = 0
         num_rows = 0
@@ -515,16 +513,22 @@ module BigBlueButton
           stream_events = matched_evts.select{|s| s[:stream] == stream}[0]
           video_begin = past_event[:timestamp] - stream_events[:start_timestamp]
           video_duration = event[:timestamp] - past_event[:timestamp]
-          trimmed_flv = "#{temp_dir}/#{meeting_id}/video#{i}-#{stream}.flv"
-          BigBlueButton.trim_video(video_begin, video_duration, "#{temp_dir}/#{meeting_id}/stripped-#{stream}.flv", trimmed_flv)
+          trimmed_video = "#{temp_dir}/#{meeting_id}/video#{i}-#{stream}.flv"
+          stripped_video = "#{temp_dir}/#{meeting_id}/stripped-#{stream}.flv"
+          BigBlueButton.trim_video(video_begin, video_duration, stripped_video, trimmed_video)
 
-          frame_size = BigBlueButton.fit_to(BigBlueButton.get_video_width(trimmed_flv), BigBlueButton.get_video_height(trimmed_flv), slot_width, slot_height)
+          # sometimes the duration is too small that ffmpeg cannot create a valid video file for it
+          # in this cases we will create a blank valid video instead
+          # \TODO investigate why is it occurring
+          if BigBlueButton.get_video_width(trimmed_video) == nil or BigBlueButton.get_video_height(trimmed_video) == nil
+            BigBlueButton.create_blank_video((event[:timestamp] - past_event[:timestamp].to_f)/1000.0, 1000, blank_canvas, trimmed_video)
+          end
+          frame_size = BigBlueButton.fit_to(BigBlueButton.get_video_width(trimmed_video), BigBlueButton.get_video_height(trimmed_video), slot_width, slot_height)
           width = frame_size[:width]
           height = frame_size[:height]
 
-          scaled_flv = "#{temp_dir}/#{meeting_id}/scaled-video#{i}-#{stream}.flv"
-          tmp_webcams << scaled_flv
-          command = "ffmpeg -i #{trimmed_flv} -loglevel fatal -v -10 -aspect 4:3 -r 1000 -sameq -vf scale=#{width}:#{height} #{scaled_flv}" 
+          scaled_video = "#{temp_dir}/#{meeting_id}/scaled-video#{i}-#{stream}.flv"
+          command = "ffmpeg -i #{trimmed_video} -loglevel fatal -v -10 -aspect 4:3 -r 1000 -sameq -vf scale=#{width}:#{height} #{scaled_video}" 
           BigBlueButton.execute(command)
 
           slot_x = (index%each_row)       * slot_width  + (MAX_VID_WIDTH  - slot_width  * each_row) / 2
@@ -532,15 +536,15 @@ module BigBlueButton
           x = slot_x + (slot_width  - width)  / 2
           y = slot_y + (slot_height - height) / 2
           
-          overlay = " [in#{index}]; movie=#{scaled_flv} [mv#{index}]; [in#{index}][mv#{index}] overlay=#{x}:#{y}"
+          overlay = " [in#{index}]; movie=#{scaled_video} [mv#{index}]; [in#{index}][mv#{index}] overlay=#{x}:#{y}"
           video_filter << overlay
         end
         BigBlueButton.logger.info("videofilter: #{video_filter}")
-        blank_flv = "#{temp_dir}/#{meeting_id}/video#{i}-blank.flv"
-        BigBlueButton.create_blank_video((event[:timestamp] - past_event[:timestamp].to_f)/1000.0, 1000, blank_canvas, blank_flv)
-        webcam_flv = "#{temp_dir}/#{meeting_id}/video#{i}.flv"
-        webcams << webcam_flv
-        command = "ffmpeg -i #{blank_flv} -loglevel fatal -r 1000 -sameq -v -10 -vf \"#{video_filter}\" #{webcam_flv}"
+        blank_video = "#{temp_dir}/#{meeting_id}/video#{i}-blank.flv"
+        BigBlueButton.create_blank_video((event[:timestamp] - past_event[:timestamp].to_f)/1000.0, 1000, blank_canvas, blank_video)
+        webcam_video = "#{temp_dir}/#{meeting_id}/video#{i}.flv"
+        webcams << webcam_video
+        command = "ffmpeg -i #{blank_video} -loglevel fatal -r 1000 -sameq -v -10 -vf \"#{video_filter}\" #{webcam_video}"
         BigBlueButton.execute(command)
       end
     end
@@ -548,7 +552,7 @@ module BigBlueButton
     BigBlueButton.concatenate_videos(webcams, concat_vid)
 
     # create mp4 video and mux audio
-    command = "ffmpeg -i #{target_dir}/audio.ogg -i #{target_dir}/video.flv  -loglevel fatal -v -10  -vcodec libx264 -profile high -preset slow -b 1000k -threads 0  -map 1:0 -map 0:0 -ar 22050 #{target_dir}/webcams.mp4"
+    command = "ffmpeg -i #{target_dir}/audio.ogg -i #{concat_vid} -loglevel fatal -v -10  -vcodec libx264 -profile high -preset slow -b 1000k -threads 0  -map 1:0 -map 0:0 -ar 22050 #{target_dir}/webcams.mp4"
     BigBlueButton.execute(command)
   end
 
