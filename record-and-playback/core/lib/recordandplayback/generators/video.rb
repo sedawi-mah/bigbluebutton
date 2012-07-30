@@ -17,11 +17,22 @@ module BigBlueButton
     # TODO: check for result, raise an exception when there is an error
   end
   
+  # Converts a time in milisseconds to a format that FFmpeg understands
+  #   ms - time in milisseconds
+  # Example:
+  #   ms_to_strtime(1000)
+  # Output:
+  #   00:00:01.000
   def self.ms_to_strtime(ms)
     t = Time.at(ms / 1000, (ms % 1000) * 1000)
     return t.getutc.strftime("%H:%M:%S.%L")
   end
   
+  # Generates a new video file given a start point and a duration
+  #   start - start point of the video_in, in milisseconds
+  #   duration - duration of the new video file, in milisseconds
+  #   video_in - the video to be used as base
+  #   video_out - the resulting new video
   def self.trim_video(start, duration, video_in, video_out)
     BigBlueButton.logger.info("Task: Trimming video")
     command = "ffmpeg -i #{video_in} -loglevel fatal -vcodec copy -acodec copy -ss #{BigBlueButton.ms_to_strtime(start)} -t #{BigBlueButton.ms_to_strtime(duration)} #{video_out}"
@@ -519,9 +530,9 @@ module BigBlueButton
 
           # sometimes the duration is too small that ffmpeg cannot create a valid video file for it
           # in this cases we will create a blank valid video instead
-          # \TODO investigate why is it occurring
-          if BigBlueButton.get_video_width(trimmed_video) == nil or BigBlueButton.get_video_height(trimmed_video) == nil
-            BigBlueButton.create_blank_video((event[:timestamp] - past_event[:timestamp].to_f)/1000.0, 1000, blank_canvas, trimmed_video)
+          # \TODO investigate why it's occurring
+          if BigBlueButton.get_video_duration(trimmed_video) == nil
+            BigBlueButton.create_blank_video(video_duration/1000.0, 1000, blank_canvas, trimmed_video)
           end
           frame_size = BigBlueButton.fit_to(BigBlueButton.get_video_width(trimmed_video), BigBlueButton.get_video_height(trimmed_video), slot_width, slot_height)
           width = frame_size[:width]
@@ -549,10 +560,15 @@ module BigBlueButton
       end
     end
     concat_vid = "#{target_dir}/video.flv"
-    BigBlueButton.concatenate_videos(webcams, concat_vid)
+    # if there's no video, it will create a single blank video
+    if webcams.empty?
+      BigBlueButton.create_blank_video(BigBlueButton.get_video_duration("#{target_dir}/audio.ogg"), 1000, blank_canvas, concat_vid)
+    else
+      BigBlueButton.concatenate_videos(webcams, concat_vid)
+    end
 
     # create mp4 video and mux audio
-    command = "ffmpeg -i #{target_dir}/audio.ogg -i #{concat_vid} -loglevel fatal -v -10  -vcodec libx264 -profile high -preset slow -b 1000k -threads 0  -map 1:0 -map 0:0 -ar 22050 #{target_dir}/webcams.mp4"
+    command = "ffmpeg -i #{target_dir}/audio.ogg -i #{concat_vid} -loglevel fatal -v -10 -vcodec libx264 -profile high -preset slow -b 1000k -threads 0  -map 1:0 -map 0:0 -ar 22050 #{target_dir}/webcams.mp4"
     BigBlueButton.execute(command)
   end
 
