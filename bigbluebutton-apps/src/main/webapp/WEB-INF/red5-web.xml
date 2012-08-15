@@ -39,6 +39,7 @@
     		</set>
   		</property>	  
   		<property name="recorderApplication"> <ref bean="recorderApplication"/></property>	
+  		<property name="callbackApplication"> <ref bean="callbackApplication"/></property>
   		<property name="connInvokerService"> <ref bean="connInvokerService"/></property>
   		<property name="version" value="${version}"/>		
 	</bean>

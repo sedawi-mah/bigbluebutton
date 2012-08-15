@@ -163,6 +163,13 @@
         <constructor-arg index="2" value="${redis.port}"/>
     </bean>
 	
+    <bean id="callbackApplication" class="org.bigbluebutton.conference.service.callback.CallbackApplication">
+        <property name="eventsRetriever"><ref local="eventsRetriever" /></property>
+    </bean>
+	<bean id="eventsRetriever" class="org.bigbluebutton.conference.service.callback.CallbackEventsRetriever">
+	    <property name="callbackUrl" value="${callback.url}" />
+        <property name="redisPool"><ref local="redisPool" /></property>
+    </bean>
     
     <!-- END RECORDER AND MESSAGING -->
     

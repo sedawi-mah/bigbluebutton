@@ -21,7 +21,9 @@ package org.bigbluebutton.conference;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.red5.server.api.Red5;import org.bigbluebutton.conference.service.participants.ParticipantsApplication;
+import org.red5.server.api.Red5;
+import org.bigbluebutton.conference.service.callback.CallbackApplication;
+import org.bigbluebutton.conference.service.participants.ParticipantsApplication;
 import org.bigbluebutton.conference.service.recorder.RecorderApplication;
 import org.red5.logging.Red5LoggerFactory;
 import org.red5.server.adapter.IApplication;
@@ -39,6 +41,7 @@ public class BigBlueButtonApplication extends MultiThreadedApplicationAdapter {
 
 	private ParticipantsApplication participantsApplication;
 	private RecorderApplication recorderApplication;
+	private CallbackApplication callbackApplication;
 	private AbstractApplicationContext appCtx;
 	private ConnectionInvokerService connInvokerService;
 	
@@ -159,6 +162,10 @@ public class BigBlueButtonApplication extends MultiThreadedApplicationAdapter {
 		recorderApplication = a;
 	}
 	
+	public void setCallbackApplication(CallbackApplication a) {
+		callbackApplication = a;
+	}
+
 	public void setApplicationListeners(Set<IApplication> listeners) {
 		int count = 0;
 		Iterator<IApplication> iter = listeners.iterator();

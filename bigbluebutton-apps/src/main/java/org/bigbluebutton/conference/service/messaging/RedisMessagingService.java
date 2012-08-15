@@ -21,9 +21,9 @@ public class RedisMessagingService implements MessagingService{
 
 	private static Logger log = Red5LoggerFactory.getLogger(RedisMessagingService.class, "bigbluebutton");
 	
-	private JedisPool redisPool;
-	private final Executor exec = Executors.newSingleThreadExecutor();
-	private Runnable pubsubListener;
+	protected JedisPool redisPool;
+	protected final Executor exec = Executors.newSingleThreadExecutor();
+	protected Runnable pubsubListener;
 	
 	private final Set<MessageListener> listeners = new HashSet<MessageListener>();
 
