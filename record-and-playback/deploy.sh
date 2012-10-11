@@ -20,7 +20,7 @@
 sudo cp -r core/lib/* /usr/local/bigbluebutton/core/lib/
 sudo cp -r core/scripts/* /usr/local/bigbluebutton/core/scripts/
 
-PLAYBACK_LIST="slides presentation"
+PLAYBACK_LIST="slides slides-enhanced presentation"
 
 sudo mkdir -p /var/bigbluebutton/playback/
 for PLAYBACK in $PLAYBACK_LIST
